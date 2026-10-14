@@ -1,0 +1,1440 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Petualangan Gaya - Media Pembelajaran SD Kelas IV</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Vue 3 CDN for reactive state management -->
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Nunito:wght@600;700;800&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'ceria-blue': '#3B82F6',
+                        'ceria-yellow': '#F59E0B',
+                        'ceria-green': '#10B981',
+                        'ceria-purple': '#8B5CF6',
+                        'ceria-pink': '#EC4899',
+                        'ceria-orange': '#F97316'
+                    },
+                    fontFamily: {
+                        fredoka: ['Fredoka', 'sans-serif'],
+                        nunito: ['Nunito', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Nunito', sans-serif;
+            background: linear-gradient(135deg, #e0f2fe 0%, #f0fdf4 50%, #fef3c7 100%);
+            min-height: 100vh;
+        }
+        h1, h2, h3, h4, .font-heading {
+            font-family: 'Fredoka', cursive;
+        }
+        .bouncy {
+            animation: bounce 2s infinite;
+        }
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-8px); }
+        }
+        .pulse-btn {
+            animation: pulse-glow 2s infinite;
+        }
+        @keyframes pulse-glow {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.5); }
+            50% { box-shadow: 0 0 0 12px rgba(59, 130, 246, 0); }
+        }
+        .card-pop {
+            transition: all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .card-pop:hover {
+            transform: translateY(-5px) scale(1.02);
+        }
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #3b82f6;
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body class="text-slate-800 antialiased selection:bg-yellow-300">
+    <div id="app" class="min-h-screen flex flex-col justify-between">
+        
+        <!-- TOP NAVIGATION BAR -->
+        <header class="sticky top-0 z-50 bg-white/90 backdrop-blur-md shadow-md border-b-4 border-blue-400">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex items-center justify-between h-20">
+                    <!-- Logo / Mascot -->
+                    <div class="flex items-center space-x-3 cursor-pointer" @click="activeTab = 'beranda'">
+                        <div class="w-12 h-12 bg-gradient-to-tr from-yellow-400 to-amber-500 rounded-full flex items-center justify-center text-white text-2xl shadow-lg transform hover:rotate-12 transition">
+                            🚀
+                        </div>
+                        <div>
+                            <span class="text-2xl font-black font-heading text-blue-600 tracking-wide">LAB GAYA</span>
+                            <span class="bg-yellow-400 text-xs font-bold px-2 py-0.5 rounded-full text-slate-800 ml-1">SD KELAS IV</span>
+                        </div>
+                    </div>
+
+                    <!-- Desktop Menu -->
+                    <nav class="hidden md:flex space-x-1 lg:space-x-2">
+                        <button v-for="menu in navMenus" :key="menu.id"
+                                @click="setActiveTab(menu.id)"
+                                :class="[activeTab === menu.id ? 'bg-blue-500 text-white shadow-lg scale-105' : 'bg-slate-100 text-slate-700 hover:bg-blue-100 hover:text-blue-600', 'px-3 lg:px-4 py-2.5 rounded-2xl font-bold font-heading text-sm flex items-center space-x-2 transition-all duration-200']">
+                            <span>{{ menu.icon }}</span>
+                            <span>{{ menu.label }}</span>
+                        </button>
+                    </nav>
+
+                    <!-- Score Header Badge -->
+                    <div class="flex items-center space-x-3">
+                        <div class="bg-amber-100 border-2 border-amber-400 text-amber-900 px-3 py-1.5 rounded-2xl font-black flex items-center space-x-2 shadow-sm">
+                            <i class="fa-solid fa-star text-yellow-500 text-lg"></i>
+                            <span class="text-lg">{{ totalScore }}</span>
+                        </div>
+                        <button @click="toggleAudio" class="p-2.5 rounded-xl bg-slate-200 hover:bg-slate-300 text-slate-700 transition">
+                            <i :class="audioMuted ? 'fa-solid fa-volume-xmark text-red-500' : 'fa-solid fa-volume-high text-green-600'"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Mobile Menu Horizontal Scroll -->
+                <div class="md:hidden flex overflow-x-auto py-2 space-x-2 scrollbar-none border-t border-slate-200">
+                    <button v-for="menu in navMenus" :key="menu.id"
+                            @click="setActiveTab(menu.id)"
+                            :class="[activeTab === menu.id ? 'bg-blue-500 text-white' : 'bg-slate-100 text-slate-700', 'px-3 py-1.5 rounded-xl text-xs font-bold font-heading flex-none flex items-center space-x-1']">
+                        <span>{{ menu.icon }}</span>
+                        <span>{{ menu.label }}</span>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- MAIN CONTENT AREA -->
+        <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+
+            <!-- 🏠 1. BERANDA -->
+            <section v-if="activeTab === 'beranda'" class="space-y-8 animate-fadeIn">
+                <!-- Hero Section -->
+                <div class="bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-600 rounded-3xl p-6 sm:p-10 text-white shadow-2xl relative overflow-hidden">
+                    <div class="absolute -right-10 -bottom-10 opacity-20 text-[200px] pointer-events-none select-none">🧲</div>
+                    <div class="relative z-10 max-w-2xl space-y-4">
+                        <span class="inline-block bg-yellow-400 text-slate-900 font-extrabold text-xs uppercase px-3 py-1 rounded-full tracking-wider shadow">Ipas Kelas IV SD</span>
+                        <h1 class="text-3xl sm:text-5xl font-black font-heading leading-tight">
+                            Jelajahi Rahasia <span class="text-yellow-300 underline decoration-wavy decoration-2">Gaya di Sekitar Kita!</span>
+                        </h1>
+                        <p class="text-blue-100 text-base sm:text-lg font-medium">
+                            Halo Sains-Mania! Tahukah kamu kenapa bola yang ditendang bisa berhenti? Atau kenapa magnet bisa menempel di kulkas? Yuk pelajari berbagai **Jenis-Jenis Gaya** lewat permainan seru & simulasi sains!
+                        </p>
+                        <div class="pt-4 flex flex-wrap gap-3">
+                            <button @click="setActiveTab('materi')" class="bg-yellow-400 hover:bg-yellow-300 text-slate-900 font-black px-6 py-3.5 rounded-2xl shadow-lg transform hover:-translate-y-1 transition flex items-center space-x-2 text-lg">
+                                <span>📚 Mula Belajar Materi</span>
+                                <i class="fa-solid fa-arrow-right"></i>
+                            </button>
+                            <button @click="setActiveTab('simulasi')" class="bg-white/20 hover:bg-white/30 text-white font-bold px-6 py-3.5 rounded-2xl backdrop-blur-md transition flex items-center space-x-2 text-lg border border-white/40">
+                                <span>🔬 Uji Coba Simulasi</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Learning Objectives & Quick Stats -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="bg-white p-6 rounded-3xl border-2 border-slate-200 shadow-sm flex items-start space-x-4">
+                        <div class="w-14 h-14 rounded-2xl bg-emerald-100 text-emerald-600 flex items-center justify-center text-2xl flex-shrink-0">
+                            🎯
+                        </div>
+                        <div>
+                            <h3 class="font-bold font-heading text-lg text-slate-800">Tujuan Pembelajaran</h3>
+                            <p class="text-sm text-slate-600 mt-1">Siswa dapat mengidentifikasi, menjelaskan, dan membedakan jenis-jenis gaya dalam kehidupan sehari-hari.</p>
+                        </div>
+                    </div>
+
+                    <div class="bg-white p-6 rounded-3xl border-2 border-slate-200 shadow-sm flex items-start space-x-4">
+                        <div class="w-14 h-14 rounded-2xl bg-amber-100 text-amber-600 flex items-center justify-center text-2xl flex-shrink-0">
+                            🎮
+                        </div>
+                        <div>
+                            <h3 class="font-bold font-heading text-lg text-slate-800">6 Mode Permainan</h3>
+                            <p class="text-sm text-slate-600 mt-1">Pilihan Ganda, Open Box, Drag & Drop, Isian, Menjodohkan, dan Benar/Salah (Lebih dari 90 Soal!).</p>
+                        </div>
+                    </div>
+
+                    <div class="bg-white p-6 rounded-3xl border-2 border-slate-200 shadow-sm flex items-start space-x-4">
+                        <div class="w-14 h-14 rounded-2xl bg-purple-100 text-purple-600 flex items-center justify-center text-2xl flex-shrink-0">
+                            🏆
+                        </div>
+                        <div>
+                            <h3 class="font-bold font-heading text-lg text-slate-800">Sistem Lencana</h3>
+                            <p class="text-sm text-slate-600 mt-1">Kumpulkan skor bintang dan raih 6 lencana pahlawan sains untuk membuka sertifikat digital!</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Visual Overview Cards -->
+                <div>
+                    <h2 class="text-2xl font-black font-heading text-slate-800 mb-4 flex items-center space-x-2">
+                        <span>⚡</span> <span>6 Jenis Gaya Utama</span>
+                    </h2>
+                    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+                        <div v-for="gaya in listGaya" :key="gaya.nama" 
+                             @click="selectedMateri = gaya; setActiveTab('materi')"
+                             class="bg-white p-4 rounded-2xl border-2 border-slate-200 shadow-sm hover:border-blue-400 card-pop cursor-pointer text-center">
+                            <div class="text-4xl mb-2">{{ gaya.icon }}</div>
+                            <h4 class="font-bold font-heading text-sm text-slate-800">{{ gaya.nama }}</h4>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+
+            <!-- 📚 2. MATERI PEMBELAJARAN -->
+            <section v-if="activeTab === 'materi'" class="space-y-6 animate-fadeIn">
+                <div class="bg-white p-6 rounded-3xl border-2 border-slate-200 shadow-sm">
+                    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-200 pb-4">
+                        <div>
+                            <h2 class="text-3xl font-black font-heading text-blue-600">📚 Ringkasan Materi IPAS: Jenis Gaya</h2>
+                            <p class="text-slate-600 text-sm">Gaya adalah dorongan atau tarikan yang dapat menyebabkan benda bergerak, berubah bentuk, atau berubah arah.</p>
+                        </div>
+                        <!-- Filter Level / Subjek -->
+                        <div class="flex space-x-2 overflow-x-auto pb-2 md:pb-0">
+                            <button v-for="gaya in listGaya" :key="gaya.nama"
+                                    @click="selectedMateri = gaya"
+                                    :class="[selectedMateri.nama === gaya.nama ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-700 hover:bg-slate-200', 'px-3 py-2 rounded-xl text-xs font-bold font-heading flex-none transition flex items-center space-x-1']">
+                                <span>{{ gaya.icon }}</span>
+                                <span>{{ gaya.nama }}</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Content Detail Card -->
+                    <div class="mt-6 grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
+                        <div class="lg:col-span-7 space-y-4">
+                            <div class="inline-flex items-center space-x-2 px-3 py-1 bg-blue-100 text-blue-700 rounded-full font-bold text-xs uppercase">
+                                <span>{{ selectedMateri.icon }}</span>
+                                <span>{{ selectedMateri.nama }}</span>
+                            </div>
+                            <h3 class="text-2xl font-black font-heading text-slate-800">{{ selectedMateri.judul }}</h3>
+                            <p class="text-slate-700 leading-relaxed text-base bg-slate-50 p-4 rounded-2xl border border-slate-200">
+                                {{ selectedMateri.penjelasan }}
+                            </p>
+                            
+                            <!-- Contoh Nyata -->
+                            <div>
+                                <h4 class="font-bold font-heading text-slate-800 text-sm uppercase tracking-wide mb-2 text-blue-600">💡 Contoh dalam Kehidupan Sehari-hari:</h4>
+                                <ul class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                    <li v-for="(contoh, idx) in selectedMateri.contoh" :key="idx"
+                                        class="bg-emerald-50 border border-emerald-200 text-emerald-900 px-3 py-2 rounded-xl text-sm font-semibold flex items-center space-x-2">
+                                        <i class="fa-solid fa-circle-check text-emerald-500"></i>
+                                        <span>{{ contoh }}</span>
+                                    </li>
+                                </ul>
+                            </div>
+
+                            <!-- Karakteristik -->
+                            <div class="bg-amber-50 border border-amber-200 p-4 rounded-2xl text-amber-900 text-sm">
+                                <strong>📌 Catatan Penting:</strong> {{ selectedMateri.catatan }}
+                            </div>
+                        </div>
+
+                        <!-- Visual Card / Mascot -->
+                        <div class="lg:col-span-5 flex flex-col items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 p-8 rounded-3xl border-2 border-blue-200 text-center">
+                            <div class="text-8xl mb-4 bouncy">{{ selectedMateri.icon }}</div>
+                            <span class="text-xl font-black font-heading text-blue-800 mb-2">{{ selectedMateri.nama }}</span>
+                            <button @click="playSpeech(selectedMateri.penjelasan)" class="mt-2 bg-blue-500 hover:bg-blue-600 text-white font-bold px-4 py-2 rounded-xl shadow text-sm flex items-center space-x-2">
+                                <i class="fa-solid fa-volume-high"></i>
+                                <span>Dengarkan Penjelasan</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+
+            <!-- 🔬 3. SIMULASI INTERAKTIF -->
+            <section v-if="activeTab === 'simulasi'" class="space-y-6 animate-fadeIn">
+                <div class="bg-white p-6 rounded-3xl border-2 border-slate-200 shadow-sm">
+                    <div class="border-b border-slate-200 pb-4 mb-6">
+                        <h2 class="text-3xl font-black font-heading text-purple-600">🔬 Laboratorium Simulasi Gaya</h2>
+                        <p class="text-slate-600 text-sm">Cobalah mengubah kondisi lingkungan dan amati bagaimana gaya bekerja secara nyata!</p>
+                        
+                        <!-- Sim Selector Tabs -->
+                        <div class="flex flex-wrap gap-2 mt-4">
+                            <button v-for="sim in simTabs" :key="sim.id"
+                                    @click="activeSim = sim.id"
+                                    :class="[activeSim === sim.id ? 'bg-purple-600 text-white shadow-md' : 'bg-slate-100 text-slate-700 hover:bg-slate-200', 'px-4 py-2 rounded-2xl font-bold font-heading text-sm transition flex items-center space-x-2']">
+                                <span>{{ sim.icon }}</span>
+                                <span>{{ sim.label }}</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- SIMULASI 1: Gaya Gesek & Otot -->
+                    <div v-if="activeSim === 'gesek'" class="space-y-6">
+                        <div class="bg-slate-900 text-white p-6 rounded-3xl relative overflow-hidden flex flex-col justify-between min-h-[300px]">
+                            <!-- Track Canvas Mockup -->
+                            <div class="text-xs font-bold bg-white/10 px-3 py-1 rounded-full w-fit mb-4 text-purple-300">
+                                Permukaan: {{ simGesekPermukaan.toUpperCase() }} (Koefisien Gesek: {{ simGesekFrictionValue }})
+                            </div>
+
+                            <!-- Moving Box -->
+                            <div class="relative w-full h-32 bg-slate-800 rounded-2xl border-b-8 flex items-center px-4 transition-all duration-300"
+                                 :class="simGesekPermukaan === 'es' ? 'border-cyan-300 bg-cyan-900/30' : (simGesekPermukaan === 'rumput' ? 'border-emerald-500 bg-emerald-950/30' : 'border-amber-700 bg-stone-800')">
+                                
+                                <div class="transition-all duration-300 ease-linear relative"
+                                     :style="{ left: simGesekPos + '%' }">
+                                    <div class="text-5xl">📦</div>
+                                    <span v-if="simGesekDorong > 0" class="absolute -left-8 top-2 text-xl font-bold text-yellow-400 animate-pulse">➡️</span>
+                                </div>
+                            </div>
+
+                            <!-- Feedback Text -->
+                            <div class="mt-4 bg-slate-800/80 p-3 rounded-xl border border-slate-700 text-sm">
+                                <span class="font-bold text-yellow-400">Hasil Analisis:</span> 
+                                <span v-if="simGesekDorong <= simGesekFrictionValue * 20">Gaya otot kamu ({{ simGesekDorong }} N) <strong class="text-red-400">belum cukup</strong> menembus gaya gesek ({{ Math.round(simGesekFrictionValue * 20) }} N). Kotak diam!</span>
+                                <span v-else>Gaya otot kamu ({{ simGesekDorong }} N) <strong class="text-emerald-400">lebih besar</strong> dari gaya gesek! Kotak berhasil didorong bergerak!</span>
+                            </div>
+                        </div>
+
+                        <!-- Controls -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 bg-slate-50 p-6 rounded-2xl border border-slate-200">
+                            <div>
+                                <label class="block font-bold font-heading text-slate-700 text-sm mb-2">1. Pilih Jenis Permukaan Ground:</label>
+                                <div class="grid grid-cols-3 gap-2">
+                                    <button @click="simGesekPermukaan = 'es'; simGesekFrictionValue = 0.1" 
+                                            :class="[simGesekPermukaan === 'es' ? 'bg-cyan-500 text-white' : 'bg-white text-slate-700', 'p-3 rounded-xl border font-bold text-sm text-center']">
+                                        🧊 Es Licin
+                                    </button>
+                                    <button @click="simGesekPermukaan = 'aspal'; simGesekFrictionValue = 0.5" 
+                                            :class="[simGesekPermukaan === 'aspal' ? 'bg-amber-600 text-white' : 'bg-white text-slate-700', 'p-3 rounded-xl border font-bold text-sm text-center']">
+                                        🛣️ Aspal
+                                    </button>
+                                    <button @click="simGesekPermukaan = 'rumput'; simGesekFrictionValue = 0.8" 
+                                            :class="[simGesekPermukaan === 'rumput' ? 'bg-emerald-600 text-white' : 'bg-white text-slate-700', 'p-3 rounded-xl border font-bold text-sm text-center']">
+                                        🌿 Rumput Tebal
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="block font-bold font-heading text-slate-700 text-sm mb-2">2. Kekuatan Gaya Otot (Dorongan): {{ simGesekDorong }} Newton</label>
+                                <input type="range" min="0" max="100" v-model="simGesekDorong" class="w-full h-3 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-purple-600">
+                                <div class="flex justify-between text-xs text-slate-500 mt-1 font-bold">
+                                    <span>0 N (Lemah)</span>
+                                    <span>50 N (Sedang)</span>
+                                    <span>100 N (Sangat Kuat)</span>
+                                </div>
+                                <button @click="runGesekSim" class="mt-3 w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-2.5 rounded-xl transition">
+                                    🚀 Dorong Kotak Sekarang!
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- SIMULASI 2: Gaya Gravitasi -->
+                    <div v-if="activeSim === 'gravitasi'" class="space-y-6">
+                        <div class="bg-gradient-to-b from-sky-900 to-slate-900 text-white p-6 rounded-3xl relative h-80 flex flex-col justify-between overflow-hidden">
+                            <div class="flex justify-between items-center text-xs font-bold">
+                                <span class="bg-white/20 px-3 py-1 rounded-full">Ketinggian: 10 Meter</span>
+                                <span class="bg-yellow-400 text-slate-900 px-3 py-1 rounded-full">Gravitasi Bumi: 9.8 m/s²</span>
+                            </div>
+
+                            <!-- Drop Zone -->
+                            <div class="relative flex-1 my-4 flex justify-around items-end border-b-4 border-emerald-500 pb-2">
+                                <!-- Benda 1 -->
+                                <div class="flex flex-col items-center">
+                                    <div class="transition-all duration-700 ease-in text-5xl mb-2"
+                                         :style="{ transform: `translateY(${simGravitasiDrop ? '140px' : '0px'})` }">
+                                        🍎
+                                    </div>
+                                    <span class="text-xs font-bold text-slate-300">Apel</span>
+                                </div>
+
+                                <!-- Benda 2 -->
+                                <div class="flex flex-col items-center">
+                                    <div class="transition-all duration-1000 ease-in text-5xl mb-2"
+                                         :style="{ transform: `translateY(${simGravitasiDrop ? '140px' : '0px'})` }">
+                                        🪶
+                                    </div>
+                                    <span class="text-xs font-bold text-slate-300">Bulu Unggas</span>
+                                </div>
+
+                                <!-- Benda 3 -->
+                                <div class="flex flex-col items-center">
+                                    <div class="transition-all duration-500 ease-in text-5xl mb-2"
+                                         :style="{ transform: `translateY(${simGravitasiDrop ? '140px' : '0px'})` }">
+                                        💣
+                                    </div>
+                                    <span class="text-xs font-bold text-slate-300">Bola Besi</span>
+                                </div>
+                            </div>
+
+                            <p class="text-xs text-center text-sky-200">
+                                Gaya gravitasi bumi selalu menarik semua benda ke arah **pusat bumi (ke bawah)**!
+                            </p>
+                        </div>
+
+                        <div class="flex justify-center space-x-4">
+                            <button @click="simGravitasiDrop = true; playSound('pop')" class="bg-amber-500 hover:bg-amber-600 text-white font-black px-6 py-3 rounded-2xl shadow-lg">
+                                🖐️ Lepaskan Benda Bersamaan!
+                            </button>
+                            <button @click="simGravitasiDrop = false" class="bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold px-6 py-3 rounded-2xl">
+                                🔄 Reset Posisi
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- SIMULASI 3: Gaya Magnet -->
+                    <div v-if="activeSim === 'magnet'" class="space-y-6">
+                        <div class="bg-slate-100 p-6 rounded-3xl border-2 border-slate-300">
+                            <h4 class="font-bold font-heading text-slate-800 text-center mb-4">Uji Tarik Benda Magnetis & Non-Magnetis</h4>
+                            <div class="flex flex-wrap justify-center gap-4 mb-6">
+                                <div v-for="item in magnetObjects" :key="item.nama"
+                                     @click="toggleMagnetItem(item)"
+                                     :class="[item.attracted ? 'bg-emerald-100 border-emerald-500 scale-105' : 'bg-white border-slate-300', 'p-4 rounded-2xl border-2 cursor-pointer transition text-center w-28 shadow-sm']">
+                                    <div class="text-4xl mb-1">{{ item.icon }}</div>
+                                    <div class="text-xs font-bold text-slate-800">{{ item.nama }}</div>
+                                    <div :class="item.attracted ? 'text-emerald-600' : 'text-slate-400'" class="text-[10px] font-black mt-1">
+                                        {{ item.attracted ? 'TERTARIK! 🧲' : 'TIDAK NEMPEL' }}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <p class="text-xs text-center text-slate-600 font-medium">
+                                *Klik benda di atas untuk mendekatkannya ke magnet U. Benda berbahan **logam besi/baja** akan ditarik oleh gaya magnet!
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- SIMULASI 4: Gaya Pegas -->
+                    <div v-if="activeSim === 'pegas'" class="space-y-6">
+                        <div class="bg-gradient-to-r from-emerald-500 to-teal-700 text-white p-8 rounded-3xl text-center space-y-4">
+                            <h4 class="font-bold font-heading text-xl">Ketapel & Gaya Pegas (Elastis)</h4>
+                            <p class="text-xs text-emerald-100">Makin jauh kamu menarik karet pegas, makin besar energi elastis yang tersimpan!</p>
+                            
+                            <div class="relative h-40 bg-white/10 rounded-2xl flex items-center justify-center overflow-hidden">
+                                <div class="text-6xl transition-all duration-300"
+                                     :style="{ transform: `scale(${1 + simPegasStretch / 100}) rotate(${simPegasStretch * 0.5}deg)` }">
+                                    🏹
+                                </div>
+                            </div>
+
+                            <div class="max-w-md mx-auto space-y-2">
+                                <label class="block text-sm font-bold">Regangan Pegas: {{ simPegasStretch }}%</label>
+                                <input type="range" min="0" max="100" v-model="simPegasStretch" class="w-full h-3 bg-white/30 rounded-lg appearance-none cursor-pointer accent-yellow-400">
+                                <button @click="releasePegas" class="bg-yellow-400 hover:bg-yellow-300 text-slate-900 font-black px-6 py-2.5 rounded-xl shadow">
+                                    💥 Lepaskan Tembakan!
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+
+            <!-- 🎮 4. PERMAINAN GAME -->
+            <section v-if="activeTab === 'permainan'" class="space-y-6 animate-fadeIn">
+                <!-- Mode Selector Bar -->
+                <div class="bg-white p-4 rounded-3xl border-2 border-slate-200 shadow-sm flex flex-col md:flex-row items-center justify-between gap-4">
+                    <div class="flex items-center space-x-2">
+                        <span class="text-3xl">🎮</span>
+                        <div>
+                            <h2 class="font-black font-heading text-xl text-slate-800">Arena Permainan Sains</h2>
+                            <p class="text-xs text-slate-500">Pilih mode tantangan favoritmu di bawah ini!</p>
+                        </div>
+                    </div>
+
+                    <!-- Game Types Selector -->
+                    <div class="flex flex-wrap gap-2">
+                        <button v-for="game in gameModes" :key="game.id"
+                                @click="selectGameMode(game.id)"
+                                :class="[currentGameMode === game.id ? 'bg-yellow-400 text-slate-900 font-black shadow' : 'bg-slate-100 text-slate-700 hover:bg-slate-200', 'px-3 py-2 rounded-xl text-xs font-bold transition flex items-center space-x-1']">
+                            <span>{{ game.icon }}</span>
+                            <span>{{ game.name }}</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Timer & Score Banner -->
+                <div class="flex justify-between items-center bg-blue-50 p-4 rounded-2xl border border-blue-200">
+                    <div class="flex items-center space-x-3">
+                        <button @click="toggleTimer" class="px-3 py-1.5 rounded-xl font-bold text-xs flex items-center space-x-1"
+                                :class="isTimerActive ? 'bg-red-500 text-white' : 'bg-slate-200 text-slate-700'">
+                            <i class="fa-solid fa-stopwatch"></i>
+                            <span>{{ isTimerActive ? 'Timer: ' + timerSeconds + 's' : 'Aktifkan Tantangan Cepat Timer' }}</span>
+                        </button>
+                    </div>
+
+                    <div class="text-sm font-bold text-blue-900">
+                        Progres Soal: <span class="text-blue-600 font-black">{{ currentGameIndex + 1 }}</span> / {{ currentQuestionsList.length }}
+                    </div>
+                </div>
+
+
+                <!-- GAME MODE 1: PILIHAN GANDA -->
+                <div v-if="currentGameMode === 'pg'" class="bg-white p-6 rounded-3xl border-2 border-slate-200 shadow-sm space-y-6">
+                    <div class="flex justify-between items-start">
+                        <span class="bg-blue-100 text-blue-800 font-black text-xs px-3 py-1 rounded-full uppercase">Soal #{{ currentGameIndex + 1 }} - Pilihan Ganda</span>
+                        <span class="text-xs font-bold text-slate-400">Level: {{ currentQuestion.level }}</span>
+                    </div>
+
+                    <h3 class="text-xl font-bold font-heading text-slate-800 leading-snug">
+                        {{ currentQuestion.question }}
+                    </h3>
+
+                    <!-- Options -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <button v-for="(opt, idx) in currentQuestion.options" :key="idx"
+                                @click="answerPG(idx)"
+                                :disabled="pgAnswered"
+                                :class="getOptionClassPG(idx)"
+                                class="p-4 rounded-2xl border-2 text-left font-bold text-sm transition flex items-center justify-between">
+                            <span>{{ opt }}</span>
+                            <i v-if="pgAnswered && idx === currentQuestion.correct" class="fa-solid fa-circle-check text-emerald-600 text-lg"></i>
+                        </button>
+                    </div>
+
+                    <!-- Explanation & Feedback Box -->
+                    <div v-if="pgAnswered" class="p-4 rounded-2xl border text-sm space-y-2 animate-fadeIn"
+                         :class="pgIsCorrect ? 'bg-emerald-50 border-emerald-300 text-emerald-900' : 'bg-red-50 border-red-300 text-red-900'">
+                        <div class="font-bold flex items-center space-x-2">
+                            <span>{{ pgIsCorrect ? '🎉 Benar Sekali!' : '❌ Ops, Belum Tepat!' }}</span>
+                        </div>
+                        <p>{{ currentQuestion.explanation }}</p>
+                        <div class="pt-2">
+                            <button @click="nextQuestion" class="bg-blue-600 hover:bg-blue-700 text-white font-black px-5 py-2.5 rounded-xl shadow">
+                                Soal Selanjutnya ➡️
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+
+                <!-- GAME MODE 2: OPEN THE BOX -->
+                <div v-if="currentGameMode === 'box'" class="bg-white p-6 rounded-3xl border-2 border-slate-200 shadow-sm space-y-6">
+                    <h3 class="text-xl font-black font-heading text-slate-800 text-center">🎁 Buka Kotak Misteri Gaya!</h3>
+                    <p class="text-xs text-center text-slate-500">Pilih salah satu kotak untuk membuka tantangan pertanyaan!</p>
+
+                    <!-- 15 Boxes Grid -->
+                    <div class="grid grid-cols-3 sm:grid-cols-5 gap-3">
+                        <button v-for="(box, idx) in boxList" :key="idx"
+                                @click="openBox(idx)"
+                                :disabled="box.opened"
+                                :class="[box.opened ? 'bg-slate-200 border-slate-300 opacity-60' : 'bg-gradient-to-tr from-amber-400 to-yellow-300 border-amber-500 hover:scale-105 shadow-md', 'h-24 rounded-2xl border-2 flex flex-col items-center justify-center text-slate-900 font-black transition']">
+                            <span class="text-3xl">{{ box.opened ? '📦' : '🎁' }}</span>
+                            <span class="text-xs mt-1">Kotak #{{ idx + 1 }}</span>
+                        </button>
+                    </div>
+
+                    <!-- Modal / Overlay for Opened Box Question -->
+                    <div v-if="selectedBox" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                        <div class="bg-white rounded-3xl p-6 max-w-md w-full shadow-2xl space-y-4 animate-fadeIn">
+                            <div class="flex justify-between items-center border-b pb-2">
+                                <span class="font-black font-heading text-lg text-amber-600">🎁 Kotak Misteri #{{ selectedBoxIndex + 1 }}</span>
+                                <button @click="selectedBox = null" class="text-slate-400 hover:text-slate-600 font-bold">✕</button>
+                            </div>
+
+                            <p class="font-bold text-slate-800">{{ selectedBox.q }}</p>
+
+                            <div class="space-y-2">
+                                <button v-for="(opt, oIdx) in selectedBox.opts" :key="oIdx"
+                                        @click="answerBoxQuestion(oIdx)"
+                                        :disabled="selectedBox.answered"
+                                        class="w-full p-3 rounded-xl border-2 border-slate-200 hover:border-amber-400 font-bold text-xs text-left bg-slate-50 hover:bg-amber-50">
+                                    {{ opt }}
+                                </button>
+                            </div>
+
+                            <div v-if="selectedBox.answered" class="p-3 bg-blue-50 border border-blue-200 rounded-xl text-xs text-blue-900">
+                                <strong>Penjelasan:</strong> {{ selectedBox.exp }}
+                                <div class="mt-2">
+                                    <button @click="selectedBox = null" class="bg-blue-600 text-white font-bold px-4 py-2 rounded-xl w-full">Tutup Kotak</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+
+                <!-- GAME MODE 3: DRAG AND DROP (WITH CLICK FALLBACK) -->
+                <div v-if="currentGameMode === 'drag'" class="bg-white p-6 rounded-3xl border-2 border-slate-200 shadow-sm space-y-6">
+                    <div>
+                        <h3 class="text-xl font-black font-heading text-slate-800">🎯 Kelompokkan Objek ke Jenis Gaya yang Tepat!</h3>
+                        <p class="text-xs text-slate-500">Seret objek atau **klik objek lalu klik kategori tujuan** di bawah ini.</p>
+                    </div>
+
+                    <!-- Items Pool -->
+                    <div class="bg-slate-100 p-4 rounded-2xl border-2 border-dashed border-slate-300 min-h-[100px] flex flex-wrap gap-2 items-center justify-center">
+                        <div v-for="item in dragItems" :key="item.id"
+                             v-show="!item.placedCategory"
+                             @click="selectDragItem(item)"
+                             :class="[selectedDragItem?.id === item.id ? 'ring-4 ring-yellow-400 bg-yellow-100 scale-105' : 'bg-white', 'px-4 py-2 rounded-xl border border-slate-300 shadow-sm cursor-pointer hover:border-blue-400 font-bold text-xs flex items-center space-x-2 transition']">
+                            <span>{{ item.icon }}</span>
+                            <span>{{ item.name }}</span>
+                        </div>
+                        <span v-if="dragItems.every(i => i.placedCategory)" class="text-emerald-600 font-bold text-sm">
+                            🎉 Semua objek telah berhasil dikelompokkan!
+                        </span>
+                    </div>
+
+                    <!-- Categories Targets -->
+                    <div class="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                        <div v-for="cat in listGaya" :key="cat.nama"
+                             @click="placeInCategory(cat.nama)"
+                             class="bg-slate-50 p-4 rounded-2xl border-2 border-slate-300 hover:border-blue-500 cursor-pointer min-h-[140px] flex flex-col justify-between">
+                            <div class="flex items-center space-x-2 font-black font-heading text-sm text-blue-700">
+                                <span>{{ cat.icon }}</span>
+                                <span>{{ cat.nama }}</span>
+                            </div>
+
+                            <!-- Placed items -->
+                            <div class="flex flex-wrap gap-1 my-2">
+                                <span v-for="pItem in getPlacedItems(cat.nama)" :key="pItem.id"
+                                      class="bg-emerald-100 border border-emerald-300 text-emerald-900 text-[10px] font-extrabold px-2 py-1 rounded-lg">
+                                    {{ pItem.icon }} {{ pItem.name }}
+                                </span>
+                            </div>
+
+                            <span class="text-[10px] text-slate-400 text-right font-bold">Klik untuk letakkan 📥</span>
+                        </div>
+                    </div>
+                </div>
+
+
+                <!-- GAME MODE 4: FILL IN THE BLANK (ISIAN SINGKAT) -->
+                <div v-if="currentGameMode === 'fill'" class="bg-white p-6 rounded-3xl border-2 border-slate-200 shadow-sm space-y-6">
+                    <div class="flex justify-between items-center">
+                        <span class="bg-purple-100 text-purple-800 font-black text-xs px-3 py-1 rounded-full uppercase">Isian Singkat #{{ fillIndex + 1 }}</span>
+                    </div>
+
+                    <h3 class="text-lg font-bold text-slate-800 leading-relaxed">
+                        {{ currentFillItem.statementBefore }}
+                        <span class="underline text-purple-600 font-black px-2"> [ . . . . . . . . . ] </span>
+                        {{ currentFillItem.statementAfter }}
+                    </h3>
+
+                    <div class="space-y-3">
+                        <input type="text" v-model="userFillInput" placeholder="Ketik jawabanmu di sini..."
+                               :disabled="fillSubmitted"
+                               class="w-full p-4 rounded-2xl border-2 border-slate-300 focus:border-purple-500 focus:ring-0 font-bold text-base">
+                        
+                        <div class="flex space-x-2">
+                            <button @click="checkFillAnswer" :disabled="fillSubmitted || !userFillInput.trim()"
+                                    class="bg-purple-600 hover:bg-purple-700 text-white font-black px-6 py-3 rounded-2xl shadow">
+                                Periksa Jawaban ✔️
+                            </button>
+                        </div>
+                    </div>
+
+                    <div v-if="fillSubmitted" class="p-4 rounded-2xl border text-sm space-y-2"
+                         :class="fillIsCorrect ? 'bg-emerald-50 border-emerald-300 text-emerald-900' : 'bg-red-50 border-red-300 text-red-900'">
+                        <div class="font-bold">
+                            {{ fillIsCorrect ? '🎉 Jawaban Tepat!' : '❌ Jawaban Kurang Tepat!' }}
+                        </div>
+                        <p>Jawaban yang Benar: <strong class="uppercase text-purple-700">{{ currentFillItem.answer }}</strong></p>
+                        <p class="text-xs text-slate-600">{{ currentFillItem.explanation }}</p>
+                        <button @click="nextFill" class="mt-2 bg-blue-600 text-white font-bold px-4 py-2 rounded-xl text-xs">
+                            Soal Isian Berikutnya ➡️
+                        </button>
+                    </div>
+                </div>
+
+
+                <!-- GAME MODE 5: MENJODOHKAN -->
+                <div v-if="currentGameMode === 'match'" class="bg-white p-6 rounded-3xl border-2 border-slate-200 shadow-sm space-y-6">
+                    <h3 class="text-xl font-black font-heading text-slate-800">🧩 Pasangkan Pernyataan & Jenis Gaya!</h3>
+                    <p class="text-xs text-slate-500">Klik satu kartu di kolom Kiri, lalu klik pasangan yang cocok di kolom Kanan.</p>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!-- Left Column (Prompts) -->
+                        <div class="space-y-2">
+                            <button v-for="pair in matchPairsLeft" :key="pair.id"
+                                    @click="selectMatchLeft(pair)"
+                                    :disabled="pair.matched"
+                                    :class="[pair.matched ? 'bg-emerald-100 border-emerald-400 text-emerald-900' : (selectedMatchLeft?.id === pair.id ? 'bg-yellow-200 border-yellow-500' : 'bg-slate-50 border-slate-200'), 'w-full p-3 rounded-xl border-2 text-left font-bold text-xs flex justify-between items-center']">
+                                <span>{{ pair.prompt }}</span>
+                                <span v-if="pair.matched">✅</span>
+                            </button>
+                        </div>
+
+                        <!-- Right Column (Targets) -->
+                        <div class="space-y-2">
+                            <button v-for="target in matchTargetsRight" :key="target.id"
+                                    @click="selectMatchRight(target)"
+                                    :disabled="target.matched"
+                                    :class="[target.matched ? 'bg-emerald-100 border-emerald-400 text-emerald-900' : 'bg-slate-50 border-slate-200 hover:border-blue-400', 'w-full p-3 rounded-xl border-2 text-left font-bold text-xs flex justify-between items-center']">
+                                <span>{{ target.targetName }}</span>
+                                <span v-if="target.matched">✅</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+
+                <!-- GAME MODE 6: BENAR / SALAH -->
+                <div v-if="currentGameMode === 'tf'" class="bg-white p-6 rounded-3xl border-2 border-slate-200 shadow-sm space-y-6 text-center">
+                    <span class="bg-pink-100 text-pink-800 font-black text-xs px-3 py-1 rounded-full uppercase">Benar / Salah #{{ tfIndex + 1 }}</span>
+
+                    <h3 class="text-2xl font-black font-heading text-slate-800 max-w-xl mx-auto">
+                        "{{ currentTF.statement }}"
+                    </h3>
+
+                    <div class="flex justify-center space-x-4 pt-4">
+                        <button @click="answerTF(true)" :disabled="tfAnswered"
+                                class="bg-emerald-500 hover:bg-emerald-600 text-white font-black text-lg px-8 py-4 rounded-2xl shadow-lg border-b-4 border-emerald-700">
+                            👍 BENAR
+                        </button>
+                        <button @click="answerTF(false)" :disabled="tfAnswered"
+                                class="bg-red-500 hover:bg-red-600 text-white font-black text-lg px-8 py-4 rounded-2xl shadow-lg border-b-4 border-red-700">
+                            👎 SALAH
+                        </button>
+                    </div>
+
+                    <div v-if="tfAnswered" class="p-4 rounded-2xl border text-sm max-w-md mx-auto text-left"
+                         :class="tfIsCorrect ? 'bg-emerald-50 border-emerald-300 text-emerald-900' : 'bg-red-50 border-red-300 text-red-900'">
+                        <div class="font-bold mb-1">{{ tfIsCorrect ? '🎉 Jawabanmu Sangat Tepat!' : '❌ Ops, Jawaban Keliru!' }}</div>
+                        <p class="text-xs">{{ currentTF.explanation }}</p>
+                        <button @click="nextTF" class="mt-3 bg-blue-600 text-white font-bold px-4 py-2 rounded-xl text-xs w-full">
+                            Lanjut ke Pernyataan Berikutnya ➡️
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+
+            <!-- 📝 5. KUIS EVALUASI -->
+            <section v-if="activeTab === 'kuis'" class="space-y-6 animate-fadeIn">
+                <div class="bg-white p-6 rounded-3xl border-2 border-slate-200 shadow-sm">
+                    <div class="border-b border-slate-200 pb-4 mb-6 flex flex-col md:flex-row justify-between md:items-center">
+                        <div>
+                            <h2 class="text-3xl font-black font-heading text-emerald-600">📝 Kuis Evaluasi Ujian Gaya</h2>
+                            <p class="text-slate-600 text-sm">Uji pemahaman keseluruhan materi untuk mengumpulkan poin & membuka lencana!</p>
+                        </div>
+                        <div class="mt-2 md:mt-0 bg-emerald-100 text-emerald-900 px-4 py-2 rounded-2xl font-bold text-xs">
+                            Total Soal Ujian: {{ quizQuestions.length }} Soal
+                        </div>
+                    </div>
+
+                    <!-- Quiz Progress -->
+                    <div class="w-full bg-slate-100 rounded-full h-3 mb-6 overflow-hidden border border-slate-200">
+                        <div class="bg-emerald-500 h-full transition-all duration-300"
+                             :style="{ width: ((quizCurrentIndex) / quizQuestions.length * 100) + '%' }"></div>
+                    </div>
+
+                    <!-- Quiz Active Question Card -->
+                    <div v-if="!quizFinished" class="space-y-6">
+                        <div class="flex justify-between items-center text-xs font-bold text-slate-400">
+                            <span>Soal {{ quizCurrentIndex + 1 }} dari {{ quizQuestions.length }}</span>
+                            <span>Bobot: 10 Poin</span>
+                        </div>
+
+                        <h3 class="text-xl font-bold font-heading text-slate-800">
+                            {{ currentQuizQuestion.question }}
+                        </h3>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <button v-for="(opt, oIdx) in currentQuizQuestion.options" :key="oIdx"
+                                    @click="selectQuizOption(oIdx)"
+                                    :class="[quizSelectedOption === oIdx ? 'bg-emerald-500 text-white border-emerald-600' : 'bg-slate-50 border-slate-200 text-slate-800 hover:bg-slate-100', 'p-4 rounded-2xl border-2 text-left font-bold text-sm transition']">
+                                {{ opt }}
+                            </button>
+                        </div>
+
+                        <div class="flex justify-end pt-4">
+                            <button @click="submitQuizAnswer" :disabled="quizSelectedOption === null"
+                                    class="bg-emerald-600 hover:bg-emerald-700 text-white font-black px-6 py-3 rounded-2xl shadow transition disabled:opacity-50">
+                                {{ quizCurrentIndex + 1 === quizQuestions.length ? 'Selesaikan Kuis 🏁' : 'Simpan & Lanjut ➡️' }}
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Quiz Finished Summary -->
+                    <div v-else class="text-center space-y-6 py-8">
+                        <div class="text-7xl bouncy">🏆</div>
+                        <h3 class="text-3xl font-black font-heading text-slate-800">Selamat! Kuis Telah Selesai!</h3>
+                        <div class="max-w-md mx-auto bg-gradient-to-br from-emerald-50 to-teal-100 p-6 rounded-3xl border-2 border-emerald-200 space-y-2">
+                            <div class="text-sm font-bold text-emerald-800">Skor Kuis Kamu:</div>
+                            <div class="text-5xl font-black text-emerald-600">{{ quizScore }} / {{ quizQuestions.length * 10 }}</div>
+                            <p class="text-xs text-emerald-700 mt-2 font-medium">{{ getMotivationalMsg(quizScore) }}</p>
+                        </div>
+
+                        <div class="flex justify-center space-x-4">
+                            <button @click="resetQuiz" class="bg-slate-200 hover:bg-slate-300 text-slate-800 font-bold px-6 py-3 rounded-2xl">
+                                🔄 Ulangi Kuis
+                            </button>
+                            <button @click="setActiveTab('hasil')" class="bg-yellow-400 hover:bg-yellow-300 text-slate-900 font-black px-6 py-3 rounded-2xl shadow">
+                                🏆 Lihat Lencana & Hasil
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+
+            <!-- 🏆 6. HASIL & LENCANA -->
+            <section v-if="activeTab === 'hasil'" class="space-y-6 animate-fadeIn">
+                <!-- User Profile Summary -->
+                <div class="bg-gradient-to-r from-amber-400 via-yellow-400 to-orange-400 rounded-3xl p-6 sm:p-8 text-slate-900 shadow-lg flex flex-col md:flex-row items-center justify-between gap-6">
+                    <div class="flex items-center space-x-4">
+                        <div class="w-20 h-20 bg-white rounded-3xl flex items-center justify-center text-4xl shadow">
+                            👑
+                        </div>
+                        <div>
+                            <h2 class="text-2xl font-black font-heading">Detektif Sains Cilik</h2>
+                            <p class="text-xs font-bold text-amber-900">Siswa Kelas IV SD - Petualang Gaya</p>
+                            <div class="mt-2 flex items-center space-x-2">
+                                <span class="bg-white/80 text-slate-900 px-3 py-1 rounded-full text-xs font-black">
+                                    ⭐ Total Skor: {{ totalScore }} Poin
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Progress Ring / Bar -->
+                    <div class="bg-white/90 p-4 rounded-2xl backdrop-blur-md text-center max-w-xs w-full shadow">
+                        <div class="text-xs font-bold text-slate-600 mb-1">Tingkat Penguasaan Materi:</div>
+                        <div class="text-2xl font-black text-blue-600 mb-2">{{ masteryPercentage }}%</div>
+                        <div class="w-full bg-slate-200 rounded-full h-3 overflow-hidden">
+                            <div class="bg-blue-600 h-full transition-all duration-500" :style="{ width: masteryPercentage + '%' }"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Badges Grid -->
+                <div class="bg-white p-6 rounded-3xl border-2 border-slate-200 shadow-sm space-y-4">
+                    <h3 class="text-2xl font-black font-heading text-slate-800 flex items-center space-x-2">
+                        <span>🎖️</span> <span>Lencana Keahlian Gaya</span>
+                    </h3>
+
+                    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+                        <div v-for="badge in badgeList" :key="badge.id"
+                             :class="[totalScore >= badge.minScore ? 'bg-gradient-to-b from-yellow-50 to-amber-100 border-amber-300' : 'bg-slate-100 border-slate-200 opacity-50 grayscale', 'p-4 rounded-2xl border-2 text-center space-y-2 shadow-sm transition']">
+                            <div class="text-5xl">{{ badge.icon }}</div>
+                            <div class="font-black font-heading text-xs text-slate-800">{{ badge.title }}</div>
+                            <div class="text-[10px] text-slate-500 font-bold">{{ badge.desc }}</div>
+                            <div :class="totalScore >= badge.minScore ? 'bg-amber-400 text-slate-900' : 'bg-slate-300 text-slate-600'"
+                                 class="text-[9px] font-extrabold px-2 py-0.5 rounded-full inline-block">
+                                {{ totalScore >= badge.minScore ? 'TERBUKA! ✨' : `Min. ${badge.minScore} Poin` }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Print Certificate Action -->
+                <div class="bg-blue-50 border border-blue-200 p-6 rounded-3xl flex flex-col sm:flex-row items-center justify-between gap-4">
+                    <div class="space-y-1">
+                        <h4 class="font-bold font-heading text-blue-900 text-lg">📜 Sertifikat Kelulusan Sains</h4>
+                        <p class="text-xs text-blue-700">Dapatkan penghargaan resmi setelah mengumpulkan minimal 100 poin!</p>
+                    </div>
+                    <button @click="showCertModal = true" :disabled="totalScore < 100"
+                            class="bg-blue-600 hover:bg-blue-700 disabled:bg-slate-300 text-white font-black px-6 py-3 rounded-2xl shadow transition flex-none">
+                        🎓 Lihat Sertifikat Saya
+                    </button>
+                </div>
+
+                <!-- Certificate Modal -->
+                <div v-if="showCertModal" class="fixed inset-0 bg-slate-900/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                    <div class="bg-white rounded-3xl p-8 max-w-2xl w-full border-8 border-yellow-400 shadow-2xl space-y-6 text-center relative">
+                        <button @click="showCertModal = false" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 font-bold text-xl">✕</button>
+                        
+                        <div class="text-5xl">🎓</div>
+                        <h2 class="text-3xl font-black font-heading text-slate-800 tracking-wide uppercase">SERTIFIKAT PENGHARGAAN</h2>
+                        <p class="text-xs text-slate-500 font-bold uppercase tracking-widest">Diberikan kepada pahlawan sains muda:</p>
+                        <div class="text-2xl font-black text-blue-600 border-b-2 border-dashed border-blue-300 pb-2 max-w-md mx-auto">
+                            Siswa SD Kelas IV IPAS
+                        </div>
+                        <p class="text-sm text-slate-700">
+                            Atas keberhasilan luar biasa dalam menguasai seluruh materi & permainan <br>
+                            <strong class="text-amber-600">"Jenis-Jenis Gaya dalam Kehidupan Sehari-Hari"</strong>.
+                        </p>
+                        <div class="flex justify-around items-center pt-4 border-t">
+                            <div class="text-center">
+                                <div class="text-xs font-bold text-slate-400">Total Skor</div>
+                                <div class="text-xl font-black text-emerald-600">{{ totalScore }} Poin</div>
+                            </div>
+                            <div class="text-center">
+                                <div class="text-xs font-bold text-slate-400">Tanggal</div>
+                                <div class="text-sm font-bold text-slate-700">14 Oktober 2026</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+        </main>
+
+        <!-- FOOTER -->
+        <footer class="bg-white border-t border-slate-200 py-4 text-center text-xs text-slate-500 font-medium">
+            Media Pembelajaran Interaktif SD Kelas IV • Kurikulum Merdeka IPAS - Jenis-jenis Gaya
+        </footer>
+    </div>
+
+    <script>
+        // Web Audio API Sound Effects Engine
+        class SoundEngine {
+            constructor() {
+                this.ctx = null;
+            }
+            init() {
+                if (!this.ctx) {
+                    this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+                }
+            }
+            playTone(freq, duration, type='sine') {
+                try {
+                    this.init();
+                    if (this.ctx.state === 'suspended') this.ctx.resume();
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = type;
+                    osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+                    gain.gain.setValueAtTime(0.15, this.ctx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.0001, this.ctx.currentTime + duration);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start();
+                    osc.stop(this.ctx.currentTime + duration);
+                } catch(e){}
+            }
+            correct() {
+                this.playTone(523.25, 0.15); // C5
+                setTimeout(() => this.playTone(659.25, 0.25), 100); // E5
+            }
+            wrong() {
+                this.playTone(220, 0.2, 'sawtooth');
+            }
+            pop() {
+                this.playTone(400, 0.08);
+            }
+        }
+
+        const sound = new SoundEngine();
+
+        const { createApp } = Vue;
+
+        createApp({
+            data() {
+                return {
+                    activeTab: 'beranda',
+                    audioMuted: false,
+                    totalScore: 0,
+                    showCertModal: false,
+
+                    navMenus: [
+                        { id: 'beranda', label: 'Beranda', icon: '🏠' },
+                        { id: 'materi', label: 'Materi', icon: '📚' },
+                        { id: 'simulasi', label: 'Simulasi', icon: '🔬' },
+                        { id: 'permainan', label: 'Permainan', icon: '🎮' },
+                        { id: 'kuis', label: 'Kuis', icon: '📝' },
+                        { id: 'hasil', label: 'Hasil & Lencana', icon: '🏆' }
+                    ],
+
+                    // Materi List
+                    listGaya: [
+                        { nama: 'Gaya Otot', icon: '💪', judul: 'Gaya Otot', penjelasan: 'Gaya yang dihasilkan oleh otot tubuh manusia atau hewan. Digunakan saat mendorong, menarik, atau mengangkat benda.', contoh: ['Menendang bola kaki', 'Mendorong meja', 'Mengangkat tas sekolah', 'Kuda menarik delman'], catatan: 'Memerlukan energi fisik dari makanan yang kita konsumsi.' },
+                        { nama: 'Gaya Gesek', icon: '🛑', judul: 'Gaya Gesek', penjelasan: 'Gaya yang timbul akibat gesekan dua permukaan benda yang saling bersentuhan. Berarah berlawanan dengan arah gerak benda.', contoh: ['Rem sepeda menghentikan roda', 'Sepatu bergerigi agar tidak tergelincir', 'Penghapus menghapus tulisan pensil'], catatan: 'Permukaan kasar membuat gaya gesek makin besar.' },
+                        { nama: 'Gaya Gravitasi', icon: '🍎', judul: 'Gaya Gravitasi', penjelasan: 'Gaya tarik bumi yang menarik semua benda menuju pusat bumi (ke bawah).', contoh: ['Buah mangga jatuh dari pohon', 'Bola dilempar ke atas akan kembali turun', 'Air terjun mengalir ke bawah'], catatan: 'Tanpa gravitasi, semua benda di bumi akan melayang di udara!' },
+                        { nama: 'Gaya Magnet', icon: '🧲', judul: 'Gaya Magnet', penjelasan: 'Gaya tarik atau gaya tolak yang dihasilkan oleh magnet terhadap benda-benda logam tertentu (seperti besi dan baja).', contoh: ['Hiasan magnet menempel di pintu kulkas', 'Jarum kompas menunjuk arah utara-selatan', 'Magnet mengangkat paku besi'], catatan: 'Kutub magnet yang senama akan tolak-menolak, kutub tidak senama akan tarik-menarik.' },
+                        { nama: 'Gaya Pegas', icon: '🏹', judul: 'Gaya Pegas', penjelasan: 'Gaya yang dihasilkan oleh benda elastis (lentur) yang diregangkan atau dimampatkan.', contoh: ['Bermain ketapel', 'Melompat di atas kasur busa/trampolin', 'Busur panah melontarkan anak panah'], catatan: 'Benda elastis akan kembali ke bentuk semula setelah ditarik.' },
+                        { nama: 'Gaya Listrik', icon: '⚡', judul: 'Gaya Listrik', penjelasan: 'Gaya yang dihasilkan oleh benda yang bermuatan listrik (listrik statis maupun dinamis).', contoh: ['Penggaris plastik digosokkan ke rambut menarik serpihan kertas', 'Kipas angin berputar saat tersambung listrik'], catatan: 'Muatan listrik sejenis tolak-menolak, beda jenis tarik-menarik.' }
+                    ],
+
+                    selectedMateri: null,
+
+                    // Simulation State
+                    activeSim: 'gesek',
+                    simTabs: [
+                        { id: 'gesek', label: 'Gaya Otot & Gesek', icon: '🏃' },
+                        { id: 'gravitasi', label: 'Gaya Gravitasi', icon: '🍎' },
+                        { id: 'magnet', label: 'Gaya Magnet', icon: '🧲' },
+                        { id: 'pegas', label: 'Gaya Pegas', icon: '🏹' }
+                    ],
+                    simGesekPermukaan: 'aspal',
+                    simGesekFrictionValue: 0.5,
+                    simGesekDorong: 40,
+                    simGesekPos: 5,
+
+                    simGravitasiDrop: false,
+
+                    magnetObjects: [
+                        { nama: 'Paku Besi', icon: '📌', isMetal: true, attracted: false },
+                        { nama: 'Pensil Kayu', icon: '✏️', isMetal: false, attracted: false },
+                        { nama: 'Klip Kertas', icon: '📎', isMetal: true, attracted: false },
+                        { nama: 'Penghapus', icon: '🧹', isMetal: false, attracted: false },
+                        { nama: 'Koin Logam', icon: '🪙', isMetal: true, attracted: false },
+                        { nama: 'Daun Kering', icon: '🍂', isMetal: false, attracted: false }
+                    ],
+
+                    simPegasStretch: 30,
+
+                    // Permainan State
+                    currentGameMode: 'pg',
+                    gameModes: [
+                        { id: 'pg', name: 'Pilihan Ganda', icon: '🔘' },
+                        { id: 'box', name: 'Open the Box', icon: '🎁' },
+                        { id: 'drag', name: 'Drag & Drop', icon: '🎯' },
+                        { id: 'fill', name: 'Isian Singkat', icon: '✏️' },
+                        { id: 'match', name: 'Menjodohkan', icon: '🧩' },
+                        { id: 'tf', name: 'Benar / Salah', icon: '👍' }
+                    ],
+
+                    isTimerActive: false,
+                    timerSeconds: 30,
+                    timerInterval: null,
+
+                    // 15 Pilihan Ganda Questions
+                    pgQuestions: [
+                        { question: 'Gaya yang terjadi saat seorang anak menendang bola sepak adalah...', options: ['A. Gaya Magnet', 'B. Gaya Otot', 'C. Gaya Pegas', 'D. Gaya Listrik'], correct: 1, level: 'Mudah', explanation: 'Menendang bola menggunakan kekuatan otot kaki.' },
+                        { question: 'Mengapa buah kelapa yang masak jatuh ke bawah menuju tanah?', options: ['A. Karena ditarik Gaya Magnet', 'B. Karena terdorong Gaya Pegas', 'C. Karena ditarik Gaya Gravitasi Bumi', 'D. Karena Gaya Gesek Udara'], correct: 2, level: 'Mudah', explanation: 'Semua benda jatuh ke bawah karena gaya gravitasi bumi.' },
+                        { question: 'Ban sepeda buatan pabrik sengaja dibuat memiliki alur atau corak kasar bertujuan untuk...', options: ['A. Memperkecil gaya gesek', 'B. Memperbesar gaya gesek agar tidak licin', 'C. Menambah kecepatan sepeda', 'D. Menghemat gaya otot'], correct: 1, level: 'Sedang', explanation: 'Permukaan ban yang kasar memperbesar gaya gesek sehingga tidak tergelincir.' },
+                        { question: 'Benda berikut yang DAPAT ditarik oleh magnet adalah...', options: ['A. Pensil kayu', 'B. Klip kertas dari besi', 'C. Penghapus karet', 'D. Botol plastik'], correct: 1, level: 'Mudah', explanation: 'Magnet hanya menarik benda berbahan logam seperti besi dan baja.' },
+                        { question: 'Saat kamu memanah, anak panah dapat meluncur jauh karena adanya gaya...', options: ['A. Gaya Pegas pada tali busur', 'B. Gaya Gravitasi', 'C. Gaya Gesek', 'D. Gaya Listrik'], correct: 0, level: 'Sedang', explanation: 'Tali busur panah bersifat elastis dan menghasilkan gaya pegas.' },
+                        { question: 'Penggaris plastik yang digosokkan ke rambut kering dapat menarik serpihan kertas kecil. Hal ini membuktikan adanya...', options: ['A. Gaya Magnet', 'B. Gaya Listrik Statis', 'C. Gaya Otot', 'D. Gaya Pegas'], correct: 1, level: 'Sedang', explanation: 'Gesekan penggaris dengan rambut memicu perpindahan muatan listrik statis.' },
+                        { question: 'Ibu mengasah pisau di atas batu asahan. Gaya yang dimanfaatkan saat mengasah pisau adalah...', options: ['A. Gaya Pegas', 'B. Gaya Gesek', 'C. Gaya Magnet', 'D. Gaya Gravitasi'], correct: 1, level: 'Sedang', explanation: 'Gesekan antara pisau dan batu asahan mengikis permukaan pisau hingga tajam.' },
+                        { question: 'Dua kutub magnet yang SENAMA (misal Utara dengan Utara) jika didekatkan akan...', options: ['A. Tarik-menarik', 'B. Tolak-menolak', 'C. Menempel erat', 'D. Diam saja'], correct: 1, level: 'Sedang', explanation: 'Kutub senama akan saling tolak-menolak.' },
+                        { question: 'Gaya dapat menyebabkan benda diam menjadi...', options: ['A. Berubah warna', 'B. Bergerak', 'C. Hilang', 'D. Beku'], correct: 1, level: 'Mudah', explanation: 'Pengaruh gaya salah satunya adalah mengubah benda diam menjadi bergerak.' },
+                        { question: 'Sepatu roda lebih mudah bergerak cepat di lantai keramik daripada di atas rumput karena...', options: ['A. Gaya gesek lantai keramik lebih kecil', 'B. Gaya gesek rumput lebih kecil', 'C. Rumput memiliki gravitasi tinggi', 'D. Keramik memiliki gaya pegas'], correct: 0, level: 'Menantang', explanation: 'Lantai licin memperkecil gaya gesek sehingga meluncur lebih cepat.' },
+                        { question: 'Alat olahraga trampolin memanfaatkan sifat elastisitas benda untuk menghasilkan gaya...', options: ['A. Gaya Gravitasi', 'B. Gaya Pegas', 'C. Gaya Listrik', 'D. Gaya Magnet'], correct: 1, level: 'Mudah', explanation: 'Trampolin yang melar dan membal menggunakan gaya pegas.' },
+                        { question: 'Kereta api super cepat Maglev melayang di atas rel tanpa menyentuh tanah memanfaatkan gaya...', options: ['A. Gaya Magnetik', 'B. Gaya Otot', 'C. Gaya Gesek', 'D. Gaya Gravitasi'], correct: 0, level: 'Menantang', explanation: 'Kereta Maglev menggunakan gaya tolak-menolak magnet canggih.' },
+                        { question: 'Saat kita mengerem sepeda yang melaju kencang, sepeda akan perlahan berhenti karena...', options: ['A. Karet rem bergesekan dengan pelek roda', 'B. Gaya pegas menahan sepeda', 'C. Gaya listrik menghentikan mesin', 'D. Gravitasi bertambah besar'], correct: 0, level: 'Sedang', explanation: 'Gaya gesek karet rem memperlambat putaran roda.' },
+                        { question: 'Jarum kompas selalu menunjuk ke arah Utara dan Selatan bumi karena terpengaruh...', options: ['A. Gaya Gesek Udara', 'B. Gaya Magnet Bumi', 'C. Gaya Otot', 'D. Gaya Pegas'], correct: 1, level: 'Menantang', explanation: 'Bumi memiliki medan magnet raksasa yang menarik jarum kompas.' },
+                        { question: 'Sapi yang menarik gerobak di sawah merupakan contoh pemanfaatan gaya...', options: ['A. Gaya Listrik', 'B. Gaya Otot Hewan', 'C. Gaya Magnet', 'D. Gaya Pegas'], correct: 1, level: 'Mudah', explanation: 'Tenaga hewan memanfaatkan gaya otot untuk menarik beban.' }
+                    ],
+                    currentGameIndex: 0,
+                    pgAnswered: false,
+                    pgSelected: null,
+                    pgIsCorrect: false,
+
+                    // 15 Open the Box Items
+                    boxList: [
+                        { q: 'Sebutkan jenis gaya saat menimba air di sumur!', opts: ['Gaya Otot', 'Gaya Magnet'], correct: 0, exp: 'Menarik tali timba menggunakan otot lengan.', opened: false, answered: false },
+                        { q: 'Apakah kayu bisa ditarik magnet?', opts: ['Bisa', 'Tidak Bisa'], correct: 1, exp: 'Kayu bukan benda logam/feromagnetik.', opened: false, answered: false },
+                        { q: 'Gaya apakah yang membuat penerjun payung jatuh melayang?', opts: ['Gaya Gravitasi & Gesek Udara', 'Gaya Listrik'], correct: 0, exp: 'Gravitasi menarik ke bawah, parasut menambah gesekan udara.', opened: false, answered: false },
+                        { q: 'Benda elastis yang menghasilkan gaya pegas contohnya...', opts: ['Karet Gelang', 'Batu Bata'], correct: 0, exp: 'Karet gelang bersifat lentur dan elastis.', opened: false, answered: false },
+                        { q: 'Bulu ayam jatuh lebih lambat dari batu karena...', opts: ['Gaya Gesek Udara lebih besar pada bulu', 'Bulu tidak punya gravitasi'], correct: 0, exp: 'Permukaan bulu tertahan oleh gesekan udara.', opened: false, answered: false },
+                        { q: 'Arah gaya gesek selalu ...... dengan arah gerak benda.', opts: ['Berlawanan', 'Searah'], correct: 0, exp: 'Gaya gesek sifatnya menghambat gerakan.', opened: false, answered: false },
+                        { q: 'Sisir bekas menyisir rambut bisa menarik potongan kertas karena...', opts: ['Gaya Listrik Statis', 'Gaya Pegas'], correct: 0, exp: 'Gesekan menimbulkan muatan listrik sementara.', opened: false, answered: false },
+                        { q: 'Pintu kulkas bisa tertutup rapat karena ada...', opts: ['Magnet di dalam karet pintu', 'Gaya Otot'], correct: 0, exp: 'Karet pintu kulkas melapisi batang magnet.', opened: false, answered: false },
+                        { q: 'Lantai yang disiram minyak goreng menjadi sangat licin karena...', opts: ['Gaya gesek berkurang drastis', 'Gravitasi hilang'], correct: 0, exp: 'Minyak adalah pelumas yang memperkecil gaya gesek.', opened: false, answered: false },
+                        { q: 'Alat penutup staples menggunakan gaya...', opts: ['Gaya Pegas & Otot', 'Gaya Magnet'], correct: 0, exp: 'Staples memiliki per/pegas di dalamnya.', opened: false, answered: false },
+                        { q: 'Buah apel di luar angkasa tidak jatuh karena...', opts: ['Tidak ada gaya gravitasi (Hampa)', 'Apelnya melayang sendiri'], correct: 0, exp: 'Di luar angkasa sangat minim gravitasi.', opened: false, answered: false },
+                        { q: 'Bagian kompas yang bergerak dinamakan...', opts: ['Jarum Magnet', 'Roda Gesek'], correct: 0, exp: 'Jarum kompas terbuat dari magnet tipis.', opened: false, answered: false },
+                        { q: 'Sepatu bola lapangan rumput memiliki paku-paku (pul) di bawahnya untuk...', opts: ['Memperbesar gaya gesek agar tidak terpeleset', 'Mempercantik bentuk'], correct: 0, exp: 'Pul sepatu mencengkeram tanah rumput.', opened: false, answered: false },
+                        { q: 'Melontarkan batu dengan ketapel memanfaatkan gaya...', opts: ['Gaya Pegas', 'Gaya Listrik'], correct: 0, exp: 'Karet ketapel yang ditarik menyimpan energi pegas.', opened: false, answered: false },
+                        { q: 'Penggunaan oli mesin kendaraan bermotor bertujuan untuk...', opts: ['Mengurangi gaya gesek mesin', 'Menambah gaya otot'], correct: 0, exp: 'Oli melumasi komponen agar tidak aus bergesekan.', opened: false, answered: false }
+                    ],
+                    selectedBox: null,
+                    selectedBoxIndex: 0,
+
+                    // 15 Drag and Drop Objects
+                    dragItems: [
+                        { id: 1, name: 'Menendang Bola', icon: '⚽', correctCategory: 'Gaya Otot', placedCategory: null },
+                        { id: 2, name: 'Rem Sepeda', icon: '🚲', correctCategory: 'Gaya Gesek', placedCategory: null },
+                        { id: 3, name: 'Apel Jatuh', icon: '🍎', correctCategory: 'Gaya Gravitasi', placedCategory: null },
+                        { id: 4, name: 'Kompas', icon: '🧭', correctCategory: 'Gaya Magnet', placedCategory: null },
+                        { id: 5, name: 'Ketapel', icon: '🏹', correctCategory: 'Gaya Pegas', placedCategory: null },
+                        { id: 6, name: 'Penggaris Plastik & Kertas', icon: '📏', correctCategory: 'Gaya Listrik', placedCategory: null },
+                        { id: 7, name: 'Mengangkat Barbel', icon: '🏋️', correctCategory: 'Gaya Otot', placedCategory: null },
+                        { id: 8, name: 'Mengasah Pisau', icon: '🔪', correctCategory: 'Gaya Gesek', placedCategory: null },
+                        { id: 9, name: 'Hujan Turun ke Bumi', icon: '🌧️', correctCategory: 'Gaya Gravitasi', placedCategory: null },
+                        { id: 10, name: 'Pintu Kulkas', icon: '🧊', correctCategory: 'Gaya Magnet', placedCategory: null },
+                        { id: 11, name: 'Trampolin', icon: '🤸', correctCategory: 'Gaya Pegas', placedCategory: null },
+                        { id: 12, name: 'Petir Menyambar', icon: '⚡', correctCategory: 'Gaya Listrik', placedCategory: null },
+                        { id: 13, name: 'Mendorong Lemari', icon: '🚪', correctCategory: 'Gaya Otot', placedCategory: null },
+                        { id: 14, name: 'Mengerem Mobil', icon: '🚗', correctCategory: 'Gaya Gesek', placedCategory: null },
+                        { id: 15, name: 'Kasur Busa Per', icon: '🛏️', correctCategory: 'Gaya Pegas', placedCategory: null }
+                    ],
+                    selectedDragItem: null,
+
+                    // 15 Fill in the Blank Questions
+                    fillQuestions: [
+                        { statementBefore: 'Gaya yang dihasilkan oleh dorongan atau tarikan otot manusia disebut gaya', statementAfter: '.', answer: 'otot', explanation: 'Gaya otot berasal dari kontraksi jaringan otot.' },
+                        { statementBefore: 'Gaya yang menarik semua benda jatuh menuju bumi adalah gaya', statementAfter: '.', answer: 'gravitasi', explanation: 'Gravitasi menarik benda ke bawah.' },
+                        { statementBefore: 'Dua permukaan benda yang saling bergesekan menghasilkan gaya', statementAfter: '.', answer: 'gesek', explanation: 'Gaya gesek menghambat gerak benda.' },
+                        { statementBefore: 'Magnet dapat menarik benda yang terbuat dari bahan', statementAfter: '.', answer: 'besi', explanation: 'Logam besi dan baja ditarik magnet.' },
+                        { statementBefore: 'Benda yang lentur dan kembali ke bentuk semula jika ditarik memiliki gaya', statementAfter: '.', answer: 'pegas', explanation: 'Gaya pegas timbul pada benda elastis.' },
+                        { statementBefore: 'Gaya yang menyebabkan sisir plastik dapat menarik kertas kecil adalah gaya listrik', statementAfter: '.', answer: 'statis', explanation: 'Listrik statis bermuatan sementara.' },
+                        { statementBefore: 'Rem pada kendaraan bermotor bekerja berdasarkan prinsip gaya', statementAfter: '.', answer: 'gesek', explanation: 'Gesekan kanvas rem menahan putaran roda.' },
+                        { statementBefore: 'Anak panah terlontar dari busurnya memanfaatkan gaya', statementAfter: '.', answer: 'pegas', explanation: 'Tali busur bersifat elastis.' },
+                        { statementBefore: 'Jarum kompas dapat menunjuk arah utara dan selatan karena gaya magnet', statementAfter: '.', answer: 'bumi', explanation: 'Bumi memiliki kutub magnet alami.' },
+                        { statementBefore: 'Minyak pelumas pada mesin kendaraan digunakan untuk memperkecil gaya', statementAfter: '.', answer: 'gesek', explanation: 'Pelumas membuat permukaan licin.' },
+                        { statementBefore: 'Saat menendang bola, kita memberikan gaya dorongan menggunakan otot', statementAfter: '.', answer: 'kaki', explanation: 'Otot kaki mendorong bola.' },
+                        { statementBefore: 'Kutub magnet yang tidak senama jika didekatkan akan saling tarik', statementAfter: '.', answer: 'menarik', explanation: 'Kutub U dan S tarik-menarik.' },
+                        { statementBefore: 'Permukaan jalan yang kasar membuat gaya gesek menjadi semakin', statementAfter: '.', answer: 'besar', explanation: 'Kasar menambah hambatan.' },
+                        { statementBefore: 'Buah kelapa yang jatuh dari pohonnya bergerak menuju ke arah', statementAfter: '.', answer: 'bawah', explanation: 'Ditarik gravitasi bumi ke bawah.' },
+                        { statementBefore: 'Benda elastis contohnya adalah karet dan', statementAfter: '.', answer: 'per', explanation: 'Per/pegas bersifat elastis.' }
+                    ],
+                    fillIndex: 0,
+                    userFillInput: '',
+                    fillSubmitted: false,
+                    fillIsCorrect: false,
+
+                    // 15 Matching Pairs
+                    matchingPairs: [
+                        { id: 1, prompt: 'Kuda menarik delman di jalan', targetName: 'Gaya Otot Hewan' },
+                        { id: 2, prompt: 'Rem mobil menghentikan roda', targetName: 'Gaya Gesek Karet' },
+                        { id: 3, prompt: 'Daun gugur jatuh ke tanah', targetName: 'Gaya Gravitasi' },
+                        { id: 4, prompt: 'Tempelan di pintu kulkas', targetName: 'Gaya Magnet' },
+                        { id: 5, prompt: 'Ketapel melontarkan kerikil', targetName: 'Gaya Pegas Elastis' },
+                        { id: 6, prompt: 'Penggaris bermuatan menarik kertas', targetName: 'Gaya Listrik Statis' },
+                        { id: 7, prompt: 'Adik melompat di kasur springbed', targetName: 'Gaya Pegas' },
+                        { id: 8, prompt: 'Menyapu lantai rumah', targetName: 'Gaya Otot' },
+                        { id: 9, prompt: 'Sepatu bergerigi di lapangan bola', targetName: 'Penambah Gaya Gesek' },
+                        { id: 10, prompt: 'Mengangkat paku menggunakan magnet U', targetName: 'Gaya Tarik Magnet' },
+                        { id: 11, prompt: 'Bola basket membal di lantai', targetName: 'Gaya Pegas / Pantul' },
+                        { id: 12, prompt: 'Petir saat hujan deras', targetName: 'Gaya Listrik Alami' },
+                        { id: 13, prompt: 'Mengasah pisau pada batu', targetName: 'Gaya Gesek Mengikis' },
+                        { id: 14, prompt: 'Air laut pasang akibat bulan', targetName: 'Gaya Gravitasi Bulan' },
+                        { id: 15, prompt: 'Mendorong meja ke sudut ruangan', targetName: 'Gaya Otot Dorong' }
+                    ],
+                    matchPairsLeft: [],
+                    matchTargetsRight: [],
+                    selectedMatchLeft: null,
+
+                    // 15 True/False Statements
+                    tfStatements: [
+                        { statement: 'Gaya gesek pada permukaan yang licin jauh lebih besar daripada permukaan yang kasar.', isTrue: false, explanation: 'Salah! Permukaan licin justru memperkecil gaya gesek.' },
+                        { statement: 'Gaya gravitasi selalu menarik benda menuju ke atas langit.', isTrue: false, explanation: 'Salah! Gravitasi selalu menarik benda ke bawah menuju pusat bumi.' },
+                        { statement: 'Magnet dapat menarik benda yang terbuat dari bahan plastik dan kaca.', isTrue: false, explanation: 'Salah! Magnet hanya menarik logam tertentu seperti besi dan baja.' },
+                        { statement: 'Gaya otot memerlukan energi makanan yang kita makan sehari-hari.', isTrue: true, explanation: 'Benar! Otot mendapatkan energi dari metabolisme makanan.' },
+                        { statement: 'Karet gelang yang ditarik lalu dilepaskan memanfaatkan prinsip gaya pegas.', isTrue: true, explanation: 'Benar! Karet gelang adalah benda elastis.' },
+                        { statement: 'Dua kutub magnet yang senama jika didekatkan akan saling tarik-menarik.', isTrue: false, explanation: 'Salah! Kutub senama (misal U dengan U) akan tolak-menolak.' },
+                        { statement: 'Minyak pelumas/oli pada mesin motor berguna untuk memperbesar gaya gesek.', isTrue: false, explanation: 'Salah! Oli berguna memperkecil gaya gesek agar mesin tidak haus.' },
+                        { statement: 'Ban kendaraan bermotor dibuat berulir/bermotif agar kendaraan tidak mudah tergelincir.', isTrue: true, explanation: 'Benar! Motip ban memperbesar gaya gesek dengan jalan.' },
+                        { statement: 'Gaya listrik statis dapat dihasilkan dengan menggosokkan dua benda tertentu.', isTrue: true, explanation: 'Benar! Gesekan memicu pemindahan muatan listrik.' },
+                        { statement: 'Buah yang jatuh dari pohonnya adalah contoh nyata gaya gesek.', isTrue: false, explanation: 'Salah! Itu adalah contoh gaya gravitasi bumi.' },
+                        { statement: 'Sepatu roda sangat sulit bergerak di atas permukaan es licin.', isTrue: false, explanation: 'Salah! Es licin membuat sepatu roda bergerak sangat cepat karena gaya gesek minim.' },
+                        { statement: 'Trampolin dapat melontarkan orang ke atas karena gaya pegas dari bahan lenturnya.', isTrue: true, explanation: 'Benar! Trampolin bersifat elastis.' },
+                        { statement: 'Menimba air sumur menggunakan otot lengan merupakan penerapan gaya otot.', isTrue: true, explanation: 'Benar! Otot lengan bekerja menarik tali sumur.' },
+                        { statement: 'Gaya dapat merubah bentuk benda, contohnya saat meremas kaleng minuman.', isTrue: true, explanation: 'Benar! Gaya tekan dapat merusak/merubah bentuk kaleng.' },
+                        { statement: 'Bumi kita memiliki medan magnet raksasa yang memengaruhi arah jarum kompas.', isTrue: true, explanation: 'Benar! Kompas menunjuk utara-selatan karena magnet bumi.' }
+                    ],
+                    tfIndex: 0,
+                    tfAnswered: false,
+                    tfIsCorrect: false,
+
+                    // Quiz Evaluasi Mode Questions (Comprehensive 10 items)
+                    quizQuestions: [
+                        { question: '1. Seorang atlet panahan menarik tali busur panah lalu melepaskannya. Gaya yang bekerja pada tali busur adalah...', options: ['Gaya Pegas', 'Gaya Magnet', 'Gaya Listrik', 'Gaya Gravitasi'], correct: 0 },
+                        { question: '2. Mengapa pekerja lantai pabrik sering memberikan oli atau minyak pelumas pada roda mesin?', options: ['Untuk menambah warna', 'Untuk memperkecil gaya gesek agar mesin lancar', 'Untuk memperbesar gaya magnet', 'Untuk menambah berat mesin'], correct: 1 },
+                        { question: '3. Pernyataan yang BENAR mengenai sifat-sifat magnet adalah...', options: ['Dapat menarik benda dari kayu', 'Kutub senama akan tarik-menarik', 'Kutub berbeda jenis akan tarik-menarik', 'Gaya magnet tidak bisa menembus kertas'], correct: 2 },
+                        { question: '4. Benda berikut yang memanfaatkan gaya gravitasi bumi saat bekerja adalah...', options: ['Kompas', 'Parasut terjung payung', 'Ketapel', 'Sisir plastik'], correct: 1 },
+                        { question: '5. Kegiatan berikut yang menunjukkan bahwa gaya dapat mengubah BENTUK benda adalah...', options: ['Menendang bola lurus', 'Menginjak kaleng minuman hingga gepeng', 'Mengerem sepeda gunung', 'Mengangkat ember berisi air'], correct: 1 },
+                        { question: '6. Saat adik bermain trampolin, tubuhnya bisa meluncur naik ke udara karena gaya...', options: ['Gaya Listrik', 'Gaya Otot', 'Gaya Pegas', 'Gaya Gravitasi'], correct: 2 },
+                        { question: '7. Mengapa sepatu bola pemain di Lapangan rumput memiliki tonjolan paku (pul) di bagian bawah?', options: ['Agar gaya gesek semakin besar sehingga tidak licin', 'Agar gaya gesek menjadi hilang', 'Agar pemain bisa terbang', 'Agar gaya gravitasi berkurang'], correct: 0 },
+                        { question: '8. Gaya yang dialami oleh penggaris plastik setelah digosok ke rambut kering lalu bisa menarik serpihan kertas adalah...', options: ['Gaya Magnetik', 'Gaya Listrik Statis', 'Gaya Gravitasi', 'Gaya Otot'], correct: 1 },
+                        { question: '9. Buah mangga jatuh dari pohonnya dan langsung mendarat di tanah. Hal ini membuktikan adanya gaya...', options: ['Gravitasi bumi', 'Gesek udara saja', 'Pegas batang', 'Listrik alami'], correct: 0 },
+                        { question: '10. Seorang petani membajak sawah menggunakan bantuan sapi. Gaya yang digunakan sapi untuk menarik bajak adalah...', options: ['Gaya Otot', 'Gaya Magnet', 'Gaya Listrik', 'Gaya Pegas'], correct: 0 }
+                    ],
+                    quizCurrentIndex: 0,
+                    quizSelectedOption: null,
+                    quizScore: 0,
+                    quizFinished: false,
+
+                    // Badges List
+                    badgeList: [
+                        { id: 1, title: 'Pemula Gaya', desc: 'Mulai petualangan sains pertamamu', icon: '🌱', minScore: 0 },
+                        { id: 2, title: 'Pakar Otot & Gesek', desc: 'Raih minimal 30 Poin', icon: '💪', minScore: 30 },
+                        { id: 3, title: 'Master Gravitasi', desc: 'Raih minimal 60 Poin', icon: '🍎', minScore: 60 },
+                        { id: 4, title: 'Detektif Magnetik', desc: 'Raih minimal 100 Poin', icon: '🧲', minScore: 100 },
+                        { id: 5, title: 'Pahlawan Elastis', desc: 'Raih minimal 150 Poin', icon: '🏹', minScore: 150 },
+                        { id: 6, title: 'Professor Sains SD', desc: 'Raih minimal 200 Poin', icon: '👑', minScore: 200 }
+                    ]
+                }
+            },
+            computed: {
+                currentQuestionsList() {
+                    return this.pgQuestions;
+                },
+                currentQuestion() {
+                    return this.pgQuestions[this.currentGameIndex] || this.pgQuestions[0];
+                },
+                currentFillItem() {
+                    return this.fillQuestions[this.fillIndex] || this.fillQuestions[0];
+                },
+                currentTF() {
+                    return this.tfStatements[this.tfIndex] || this.tfStatements[0];
+                },
+                currentQuizQuestion() {
+                    return this.quizQuestions[this.quizCurrentIndex] || this.quizQuestions[0];
+                },
+                masteryPercentage() {
+                    const maxPossible = 300;
+                    const pct = Math.round((this.totalScore / maxPossible) * 100);
+                    return pct > 100 ? 100 : pct;
+                }
+            },
+            created() {
+                this.selectedMateri = this.listGaya[0];
+                this.setupMatchingData();
+            },
+            methods: {
+                setActiveTab(tabId) {
+                    this.activeTab = tabId;
+                    this.playSound('pop');
+                },
+                playSound(type) {
+                    if (this.audioMuted) return;
+                    if (type === 'correct') sound.correct();
+                    else if (type === 'wrong') sound.wrong();
+                    else sound.pop();
+                },
+                toggleAudio() {
+                    this.audioMuted = !this.audioMuted;
+                },
+                playSpeech(text) {
+                    if ('speechSynthesis' in window) {
+                        window.speechSynthesis.cancel();
+                        const utterance = new SpeechSynthesisUtterance(text);
+                        utterance.lang = 'id-ID';
+                        utterance.rate = 0.9;
+                        window.speechSynthesis.speak(utterance);
+                    }
+                },
+                addScore(pts) {
+                    this.totalScore += pts;
+                },
+
+                // Simulation Methods
+                runGesekSim() {
+                    this.playSound('pop');
+                    const required = this.simGesekFrictionValue * 20;
+                    if (this.simGesekDorong > required) {
+                        this.simGesekPos = 70;
+                        this.playSound('correct');
+                        setTimeout(() => { this.simGesekPos = 5; }, 1500);
+                    } else {
+                        this.playSound('wrong');
+                    }
+                },
+                toggleMagnetItem(item) {
+                    if (item.isMetal) {
+                        item.attracted = !item.attracted;
+                        if (item.attracted) {
+                            this.playSound('correct');
+                            this.addScore(2);
+                        }
+                    } else {
+                        this.playSound('wrong');
+                        item.attracted = false;
+                    }
+                },
+                releasePegas() {
+                    this.playSound('pop');
+                    this.simPegasStretch = 0;
+                    setTimeout(() => { this.simPegasStretch = 40; }, 600);
+                },
+
+                // Permainan Mode Handlers
+                selectGameMode(modeId) {
+                    this.currentGameMode = modeId;
+                    this.playSound('pop');
+                },
+                toggleTimer() {
+                    this.isTimerActive = !this.isTimerActive;
+                    if (this.isTimerActive) {
+                        this.timerSeconds = 30;
+                        clearInterval(this.timerInterval);
+                        this.timerInterval = setInterval(() => {
+                            if (this.timerSeconds > 0) {
+                                this.timerSeconds--;
+                            } else {
+                                clearInterval(this.timerInterval);
+                                this.playSound('wrong');
+                            }
+                        }, 1000);
+                    } else {
+                        clearInterval(this.timerInterval);
+                    }
+                },
+
+                // Mode 1: Pilihan Ganda
+                answerPG(optionIndex) {
+                    this.pgAnswered = true;
+                    this.pgSelected = optionIndex;
+                    if (optionIndex === this.currentQuestion.correct) {
+                        this.pgIsCorrect = true;
+                        this.playSound('correct');
+                        this.addScore(10);
+                    } else {
+                        this.pgIsCorrect = false;
+                        this.playSound('wrong');
+                    }
+                },
+                getOptionClassPG(idx) {
+                    if (!this.pgAnswered) return 'bg-slate-50 border-slate-200 hover:border-blue-400 hover:bg-blue-50 text-slate-800';
+                    if (idx === this.currentQuestion.correct) return 'bg-emerald-100 border-emerald-500 text-emerald-900 font-bold';
+                    if (idx === this.pgSelected) return 'bg-red-100 border-red-500 text-red-900';
+                    return 'bg-slate-50 border-slate-200 opacity-50';
+                },
+                nextQuestion() {
+                    this.pgAnswered = false;
+                    this.pgSelected = null;
+                    if (this.currentGameIndex < this.pgQuestions.length - 1) {
+                        this.currentGameIndex++;
+                    } else {
+                        this.currentGameIndex = 0;
+                    }
+                },
+
+                // Mode 2: Open Box
+                openBox(index) {
+                    this.selectedBoxIndex = index;
+                    this.selectedBox = this.boxList[index];
+                    this.boxList[index].opened = true;
+                    this.playSound('pop');
+                },
+                answerBoxQuestion(optIdx) {
+                    this.selectedBox.answered = true;
+                    if (optIdx === this.selectedBox.correct) {
+                        this.playSound('correct');
+                        this.addScore(10);
+                    } else {
+                        this.playSound('wrong');
+                    }
+                },
+
+                // Mode 3: Drag & Drop
+                selectDragItem(item) {
+                    this.selectedDragItem = item;
+                    this.playSound('pop');
+                },
+                placeInCategory(catName) {
+                    if (!this.selectedDragItem) return;
+                    if (this.selectedDragItem.correctCategory === catName) {
+                        this.selectedDragItem.placedCategory = catName;
+                        this.playSound('correct');
+                        this.addScore(10);
+                        this.selectedDragItem = null;
+                    } else {
+                        this.playSound('wrong');
+                    }
+                },
+                getPlacedItems(catName) {
+                    return this.dragItems.filter(i => i.placedCategory === catName);
+                },
+
+                // Mode 4: Fill in Blank
+                checkFillAnswer() {
+                    this.fillSubmitted = true;
+                    const normalized = this.userFillInput.trim().toLowerCase();
+                    if (normalized === this.currentFillItem.answer.toLowerCase()) {
+                        this.fillIsCorrect = true;
+                        this.playSound('correct');
+                        this.addScore(10);
+                    } else {
+                        this.fillIsCorrect = false;
+                        this.playSound('wrong');
+                    }
+                },
+                nextFill() {
+                    this.fillSubmitted = false;
+                    this.userFillInput = '';
+                    if (this.fillIndex < this.fillQuestions.length - 1) {
+                        this.fillIndex++;
+                    } else {
+                        this.fillIndex = 0;
+                    }
+                },
+
+                // Mode 5: Menjodohkan
+                setupMatchingData() {
+                    this.matchPairsLeft = this.matchingPairs.map(p => ({ ...p, matched: false }));
+                    // Shuffle right column
+                    this.matchTargetsRight = [...this.matchingPairs]
+                        .sort(() => Math.random() - 0.5)
+                        .map(p => ({ ...p, matched: false }));
+                },
+                selectMatchLeft(pair) {
+                    this.selectedMatchLeft = pair;
+                    this.playSound('pop');
+                },
+                selectMatchRight(target) {
+                    if (!this.selectedMatchLeft) return;
+                    if (this.selectedMatchLeft.id === target.id) {
+                        this.selectedMatchLeft.matched = true;
+                        target.matched = true;
+                        this.playSound('correct');
+                        this.addScore(10);
+                        this.selectedMatchLeft = null;
+                    } else {
+                        this.playSound('wrong');
+                    }
+                },
+
+                // Mode 6: True / False
+                answerTF(userBool) {
+                    this.tfAnswered = true;
+                    if (userBool === this.currentTF.isTrue) {
+                        this.tfIsCorrect = true;
+                        this.playSound('correct');
+                        this.addScore(10);
+                    } else {
+                        this.tfIsCorrect = false;
+                        this.playSound('wrong');
+                    }
+                },
+                nextTF() {
+                    this.tfAnswered = false;
+                    if (this.tfIndex < this.tfStatements.length - 1) {
+                        this.tfIndex++;
+                    } else {
+                        this.tfIndex = 0;
+                    }
+                },
+
+                // Quiz Mode
+                selectQuizOption(idx) {
+                    this.quizSelectedOption = idx;
+                    this.playSound('pop');
+                },
+                submitQuizAnswer() {
+                    if (this.quizSelectedOption === this.currentQuizQuestion.correct) {
+                        this.quizScore += 10;
+                        this.addScore(10);
+                        this.playSound('correct');
+                    } else {
+                        this.playSound('wrong');
+                    }
+
+                    if (this.quizCurrentIndex < this.quizQuestions.length - 1) {
+                        this.quizCurrentIndex++;
+                        this.quizSelectedOption = null;
+                    } else {
+                        this.quizFinished = true;
+                    }
+                },
+                resetQuiz() {
+                    this.quizCurrentIndex = 0;
+                    this.quizSelectedOption = null;
+                    this.quizScore = 0;
+                    this.quizFinished = false;
+                },
+                getMotivationalMsg(score) {
+                    if (score >= 90) return 'Luar biasa! Kamu adalah Jenius Sains sejati! 🌟';
+                    if (score >= 60) return 'Hebat! Pemahaman gayamu sudah sangat baik! 👍';
+                    return 'Bagus! Ayo ulas kembali materi dan coba kuis lagi! 💪';
+                }
+            }
+        }).mount('#app');
+    </script>
+</body>
+</html>
